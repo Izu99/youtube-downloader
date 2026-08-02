@@ -160,7 +160,7 @@ Depends: python3 (>= 3.10), python3-tk, ffmpeg, xdg-utils
 Recommends: curl
 Maintainer: $MAINTAINER
 Installed-Size: $INSTALLED_KB
-Homepage: https://github.com/Izu99/yt-download
+Homepage: https://github.com/Izu99/youtube-downloader
 Description: YouTube Downloader - save YouTube video as MP4 or audio as MP3
  A small desktop front-end for yt-dlp. Paste a YouTube link, pick audio
  (MP3 at 128/192/320 kbps) or video (up to 1080p), and download it, with
