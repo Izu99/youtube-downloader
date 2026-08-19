@@ -27,7 +27,7 @@ mkdir -p "$ROOT/DEBIAN" \
          "$VENDOR/bin" \
          "$ROOT/usr/bin" \
          "$ROOT/usr/share/applications" \
-         "$ROOT/usr/share/icons/hicolor/scalable/apps" \
+         "$ROOT/usr/share/icons/hicolor/256x256/apps" \
          "$ROOT/usr/share/doc/$PKG"
 
 # ---- application ------------------------------------------------------------
@@ -71,7 +71,12 @@ export PYTHONPATH="$VENDOR${PYTHONPATH:+:$PYTHONPATH}"
 
 # A user-updated yt-dlp (see youtube-downloader-update) wins over the bundled
 # copy, which in turn wins over any older system-wide one on PATH.
-export PATH="$USER_BIN:$VENDOR/bin:$PATH"
+#
+# ~/.local/bin is listed explicitly because YouTube now requires a JavaScript
+# runtime (deno) to solve its player challenge, and a desktop-menu launch gets a
+# minimal PATH that often omits it — which shows up as "No supported JavaScript
+# runtime could be found" followed by 403s on every download.
+export PATH="$USER_BIN:$VENDOR/bin:$HOME/.local/bin:$PATH"
 
 exec python3 "$APP_DIR/app.py" "$@"
 EOF
@@ -94,15 +99,17 @@ BIN="$USER_DIR/bin/yt-dlp"
 
 mkdir -p "$USER_DIR/bin"
 
-echo "==> Downloading the latest yt-dlp…"
+# Nightly, not stable. YouTube's anti-bot changes (PO tokens, SABR) break
+# downloads faster than the stable channel ships: on 2026-08-19 stable
+# (2026.07.04) returned 403 on every music video tried, while that day's
+# nightly downloaded all of them. Stable is weeks behind a weekly-moving target.
+URL=https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/yt-dlp
+
+echo "==> Downloading the latest yt-dlp nightly…"
 if command -v curl >/dev/null 2>&1; then
-    curl -fL --progress-bar \
-        https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
-        -o "$BIN.tmp"
+    curl -fL --progress-bar "$URL" -o "$BIN.tmp"
 elif command -v wget >/dev/null 2>&1; then
-    wget -q --show-progress \
-        https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp \
-        -O "$BIN.tmp"
+    wget -q --show-progress "$URL" -O "$BIN.tmp"
 else
     echo "Need curl or wget to update." >&2
     exit 1
@@ -117,16 +124,8 @@ EOF
 chmod 0755 "$ROOT/usr/bin/$PKG-update"
 
 # ---- icon -------------------------------------------------------------------
-cat > "$ROOT/usr/share/icons/hicolor/scalable/apps/$PKG.svg" <<'EOF'
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="14" fill="#171a21"/>
-  <rect x="8" y="16" width="48" height="34" rx="9" fill="#ff3b30"/>
-  <path d="M27 25.5v15l13-7.5z" fill="#ffffff"/>
-  <path d="M32 50v9m0 0-5-5m5 5 5-5" stroke="#4f9cff" stroke-width="3.4"
-        stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-</svg>
-EOF
-chmod 0644 "$ROOT/usr/share/icons/hicolor/scalable/apps/$PKG.svg"
+install -m 0644 "$HERE/icon.png" \
+    "$ROOT/usr/share/icons/hicolor/256x256/apps/$PKG.png"
 
 # ---- desktop entry ----------------------------------------------------------
 cat > "$ROOT/usr/share/applications/$PKG.desktop" <<EOF
