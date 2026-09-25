@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import customtkinter as ctk
+import tkinter as tk
 import subprocess
 import threading
 import os
@@ -15,6 +16,7 @@ DATA_DIR = os.path.join(
     "youtube-downloader",
 )
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
+ICON_FILE = "/usr/share/icons/hicolor/256x256/apps/youtube-downloader.png"
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(VIDEO_DIR, exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -154,8 +156,13 @@ CORNER = 12
 
 class App(ctk.CTk):
     def __init__(self):
-        super().__init__()
+        # The panel groups a window with its launcher by WM_CLASS. Tk's default
+        # is "tk"/"Tk", which matches no .desktop file, so the taskbar showed a
+        # second, generic icon next to the pinned one instead of reusing it.
+        # Keep this in sync with StartupWMClass in youtube-downloader.desktop.
+        super().__init__(className="youtube-downloader")
         self.title("YouTube Downloader")
+        self._set_window_icon()
         # 780px tall did not fit a 1366x768 laptop panel — the buttons fell off
         # the bottom of the screen. Wide-and-short clears it with room for the
         # title bar, and resizing is allowed now so other screens can adjust.
@@ -180,6 +187,18 @@ class App(ctk.CTk):
         self._refresh_version()
 
     # ---- UI helpers --------------------------------------------------------
+
+    def _set_window_icon(self):
+        """Give the window its own _NET_WM_ICON.
+
+        Without this the window list and alt-tab fall back to the theme's
+        generic application icon even once WM_CLASS matches.
+        """
+        try:
+            self._icon_image = tk.PhotoImage(file=ICON_FILE)
+            self.iconphoto(True, self._icon_image)
+        except Exception:
+            pass  # a missing or unreadable icon must never block startup
 
     def _section_label(self, parent, text):
         """Small muted upper-case caption above a control."""

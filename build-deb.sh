@@ -140,6 +140,7 @@ Terminal=false
 Categories=AudioVideo;Audio;Video;
 Keywords=youtube;download;mp3;mp4;video;audio;yt-dlp;
 StartupNotify=true
+StartupWMClass=$PKG
 EOF
 chmod 0644 "$ROOT/usr/share/applications/$PKG.desktop"
 
